@@ -6,6 +6,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Fino Palastro - Cardapio</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script>
+(function(){
+  var cfg={apiKey:"AIzaSyAyZ-ILP1zyLPyHM1JZOxp9cmCAF6X4JCI",authDomain:"fino-palastro.firebaseapp.com",
+    projectId:"fino-palastro",storageBucket:"fino-palastro.firebasestorage.app",
+    messagingSenderId:"723898018846",appId:"1:723898018846:web:39f731562a8fb8c52c920f"};
+  if(!firebase.apps.length) firebase.initializeApp(cfg);
+  window.__fsdb=firebase.firestore();
+})();
+</script>
 <style>
 :root {
   --red: #C8181A;
@@ -556,6 +567,26 @@ function finalizarPedido() {
 
   var url = "https://wa.me/5548991307102?text=" + encodeURIComponent(msg);
   document.getElementById("wpp-link").href = url;
+
+  // Salvar pedido no Firebase Firestore (aparece em tempo real na gestão)
+  try {
+    window.__fsdb.collection('fp_pedidos').add({
+      cliente: nome,
+      whatsapp: fone,
+      itens: itens.map(function(i){ return {nome:i.nome, qty:i.qty, preco:i.preco}; }),
+      subtotal: subtotal,
+      taxa: taxa,
+      total: total,
+      local: localEscolhido,
+      endereco: localEscolhido==='delivery' ? document.getElementById("campo-endereco").value : 'Retirada no local',
+      data: dataFmt,
+      horario: horario,
+      pagamento: pagamentoEscolhido,
+      obs: obs || '',
+      status: 'novo',
+      criadoEm: firebase.firestore.FieldValue.serverTimestamp()
+    });
+  } catch(e) {}
 
   // Salvar pedido no Google Sheets via Apps Script
   var itensTxt = itens.map(function(i){ return i.qty + "x " + i.nome; }).join(", ");
