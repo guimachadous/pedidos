@@ -1,0 +1,608 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fino Palastro - Cardapio</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --red: #C8181A;
+  --red-dark: #9E1012;
+  --cream: #FDF6EC;
+  --charcoal: #1A1A1A;
+  --gray: #6B6B6B;
+  --light: #F5F5F5;
+  --white: #FFFFFF;
+  --green: #2D7A4F;
+  --green-light: #E8F5EE;
+  --shadow: 0 2px 16px rgba(0,0,0,0.10);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Inter', sans-serif; background: var(--cream); color: var(--charcoal); min-height: 100vh; }
+
+header { background: var(--red); padding: 28px 20px 24px; text-align: center; }
+header .logo-text { font-family: 'Playfair Display', serif; font-size: 13px; color: rgba(255,255,255,0.7); letter-spacing: 4px; text-transform: uppercase; margin-bottom: 4px; }
+header h1 { font-family: 'Playfair Display', serif; font-size: 38px; font-weight: 900; color: var(--white); line-height: 1; }
+header .tagline { font-size: 12px; color: rgba(255,255,255,0.75); margin-top: 8px; }
+.info-banner { background: var(--red-dark); color: white; font-size: 12px; text-align: center; padding: 8px 16px; }
+
+.tabs { display: flex; background: var(--white); border-bottom: 2px solid var(--light); position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+.tab { flex: 1; padding: 14px 8px; text-align: center; font-size: 13px; font-weight: 600; color: var(--gray); cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.2s; }
+.tab.active { color: var(--red); border-bottom-color: var(--red); }
+
+.section { display: none; padding: 20px 16px 120px; }
+.section.active { display: block; }
+.section-title { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+.section-sub { font-size: 12px; color: var(--gray); margin-bottom: 18px; }
+
+.pizza-card { background: var(--white); border-radius: 16px; padding: 18px; margin-bottom: 14px; box-shadow: var(--shadow); position: relative; }
+.pizza-card.esgotado { opacity: 0.55; }
+.badge-esgotado { position: absolute; top: 14px; right: 14px; background: #E53E3E; color: white; font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px; }
+.pizza-name { font-family: 'Playfair Display', serif; font-size: 17px; font-weight: 700; margin-bottom: 5px; padding-right: 90px; }
+.pizza-desc { font-size: 12px; color: var(--gray); line-height: 1.55; margin-bottom: 12px; }
+.pizza-footer { display: flex; align-items: center; justify-content: space-between; }
+.pizza-price { font-size: 20px; font-weight: 700; color: var(--red); }
+.add-btn { background: var(--red); color: white; border: none; border-radius: 24px; padding: 9px 20px; font-size: 13px; font-weight: 600; cursor: pointer; }
+.add-btn:disabled { background: #ccc; cursor: not-allowed; }
+
+.order-form { display: flex; flex-direction: column; gap: 18px; }
+.form-group label { display: block; font-size: 12px; font-weight: 600; color: var(--gray); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 8px; }
+.form-group input, .form-group select, .form-group textarea { width: 100%; padding: 13px 16px; border: 2px solid #E5E5E5; border-radius: 12px; font-size: 15px; font-family: 'Inter', sans-serif; background: var(--white); color: var(--charcoal); outline: none; transition: border 0.2s; }
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--red); }
+
+.cart-box { background: var(--white); border-radius: 16px; padding: 18px; box-shadow: var(--shadow); margin-bottom: 18px; }
+.cart-title { font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 700; margin-bottom: 12px; }
+.cart-empty { text-align: center; color: var(--gray); font-size: 13px; padding: 20px 0; }
+.cart-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--light); font-size: 14px; }
+.cart-item:last-child { border-bottom: none; }
+.cart-item-name { font-weight: 500; flex: 1; }
+.cart-item-qty { display: flex; align-items: center; gap: 10px; margin: 0 12px; }
+.qty-btn { background: var(--light); border: none; border-radius: 50%; width: 28px; height: 28px; font-size: 16px; cursor: pointer; font-weight: 700; }
+.cart-item-price { font-weight: 700; color: var(--red); min-width: 64px; text-align: right; }
+.cart-subtotal { display: flex; justify-content: space-between; font-size: 14px; color: var(--gray); padding-top: 10px; margin-top: 4px; }
+.cart-taxa { display: flex; justify-content: space-between; font-size: 14px; color: var(--gray); padding-top: 6px; }
+.cart-total-row { display: flex; justify-content: space-between; font-size: 18px; font-weight: 700; padding-top: 10px; margin-top: 6px; border-top: 2px solid var(--light); }
+.cart-total-row span:last-child { color: var(--red); }
+
+.opcoes { display: flex; gap: 10px; margin-top: 6px; }
+.opcao { flex: 1; border: 2px solid #E5E5E5; border-radius: 12px; padding: 14px 10px; text-align: center; cursor: pointer; transition: all 0.2s; font-size: 13px; font-weight: 600; color: var(--gray); background: var(--white); }
+.opcao.selected { border-color: var(--red); color: var(--red); background: #FFF5F5; }
+.opcao .icon { font-size: 22px; display: block; margin-bottom: 5px; }
+
+.info-box { border-radius: 10px; padding: 12px 14px; font-size: 13px; margin-top: 8px; line-height: 1.6; }
+.info-box.verde { background: var(--green-light); border: 2px solid #A8D5B8; color: var(--green); }
+.info-box.amarelo { background: #FFF8E1; border: 2px solid #FFE082; color: #7A5F00; }
+.info-box.cinza { background: var(--light); color: var(--gray); }
+
+.pix-key { font-size: 15px; font-weight: 600; background: white; border-radius: 8px; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; border: 1px solid #D0EAD9; margin-top: 8px; }
+
+.submit-btn { width: 100%; background: var(--red); color: white; border: none; border-radius: 14px; padding: 17px; font-size: 16px; font-weight: 700; cursor: pointer; }
+.submit-btn:hover { background: var(--red-dark); }
+
+.floating-cart { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--red); color: white; border: none; border-radius: 30px; padding: 14px 28px; font-size: 14px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 20px rgba(200,24,26,0.4); display: none; align-items: center; gap: 12px; z-index: 200; white-space: nowrap; }
+.floating-cart.show { display: flex; }
+.cart-badge { background: white; color: var(--red); border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; }
+
+.success-screen { display: none; text-align: center; padding: 50px 20px; }
+.success-screen.show { display: block; }
+.success-icon { font-size: 64px; margin-bottom: 16px; }
+.success-title { font-family: 'Playfair Display', serif; font-size: 26px; font-weight: 700; color: var(--green); margin-bottom: 8px; }
+.success-msg { font-size: 14px; color: var(--gray); line-height: 1.6; margin-bottom: 28px; }
+.wpp-btn { display: inline-flex; align-items: center; gap: 10px; background: #25D366; color: white; font-weight: 700; font-size: 15px; padding: 16px 28px; border-radius: 14px; text-decoration: none; box-shadow: 0 4px 16px rgba(37,211,102,0.35); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo-text">Fino</div>
+  <h1>Palastro</h1>
+  <div class="tagline">Pizzas Napolitanas pre-assadas · Criciuma</div>
+</header>
+<div class="info-banner">Com pizza, coisas boas acontecem ate na terca-feira.</div>
+
+<div class="tabs">
+  <div class="tab active" id="tab-salgadas" onclick="showTab('salgadas')">Salgadas</div>
+  <div class="tab" id="tab-doces" onclick="showTab('doces')">Doces</div>
+  <div class="tab" id="tab-pedido" onclick="showTab('pedido')">Pedido</div>
+</div>
+
+<!-- SALGADAS -->
+<div id="sec-salgadas" class="section active">
+  <p class="section-title">Pizzas Salgadas</p>
+  <p class="section-sub">Massa napolitana pre-assada · Ingredientes selecionados</p>
+  <div id="lista-salgadas"></div>
+</div>
+
+<!-- DOCES -->
+<div id="sec-doces" class="section">
+  <p class="section-title">Pizzas Doces</p>
+  <p class="section-sub">Para adocar qualquer dia da semana</p>
+  <div id="lista-doces"></div>
+</div>
+
+<!-- PEDIDO -->
+<div id="sec-pedido" class="section">
+
+  <div class="success-screen" id="success-screen">
+    <div class="success-icon">🍕</div>
+    <div class="success-title">Pedido pronto!</div>
+    <div class="success-msg">Abrindo WhatsApp automaticamente...</div>
+    <div id="countdown-box" style="font-size:48px;font-weight:900;color:var(--red);margin:10px 0;">3</div>
+    <a id="wpp-link" href="#" target="_blank" class="wpp-btn">Enviar pelo WhatsApp</a>
+    <div style="font-size:12px;color:#aaa;margin-top:8px;">Se nao abrir automaticamente, clique no botao acima</div>
+  </div>
+
+  <div id="order-content">
+    <!-- CARRINHO -->
+    <div class="cart-box">
+      <div class="cart-title">Seu pedido</div>
+      <div id="cart-list">
+        <div class="cart-empty">Nenhum item ainda. Escolha suas pizzas acima!</div>
+      </div>
+      <div id="cart-resumo" style="display:none;"></div>
+    </div>
+
+    <div class="order-form">
+
+      <div class="form-group">
+        <label>Seu nome</label>
+        <input type="text" id="campo-nome" placeholder="Como devemos te chamar?">
+      </div>
+
+      <div class="form-group">
+        <label>WhatsApp</label>
+        <input type="tel" id="campo-fone" placeholder="(48) 99999-9999">
+      </div>
+
+      <!-- RECEBIMENTO -->
+      <div class="form-group">
+        <label>Recebimento</label>
+        <div class="opcoes">
+          <div class="opcao" id="opt-retirada" onclick="escolherLocal('retirada')">
+            <span class="icon">🏪</span>Retirada
+          </div>
+          <div class="opcao" id="opt-delivery" onclick="escolherLocal('delivery')">
+            <span class="icon">🛵</span>Delivery
+          </div>
+        </div>
+        <div id="info-retirada" class="info-box cinza" style="display:none;">
+          📍 Rua Emilio de Menezes, 195 - Sala 102<br>Bairro Santa Catarina - CEP 88810-260 - Criciuma
+        </div>
+      </div>
+
+      <!-- DELIVERY: CIDADE -->
+      <div id="bloco-delivery" style="display:none;">
+        <div class="form-group">
+          <label>Cidade de entrega</label>
+          <div class="opcoes">
+            <div class="opcao" id="opt-criciuma" onclick="escolherCidade('criciuma')">
+              <span class="icon">📍</span>Criciuma
+            </div>
+            <div class="opcao" id="opt-outra" onclick="escolherCidade('outra')">
+              <span class="icon">🗺️</span>Outra cidade
+            </div>
+          </div>
+          <div id="info-taxa" class="info-box verde" style="display:none;">
+            🛵 Taxa de entrega: <strong>R$ 15,00</strong>
+          </div>
+          <div id="info-outra" class="info-box amarelo" style="display:none;">
+            ⚠️ Para entregas fora de Criciuma, o frete precisa ser confirmado antes.<br>
+            <strong id="link-frete" onclick="consultarFrete()" style="color:var(--red);cursor:pointer;">👉 Consultar frete pelo WhatsApp</strong>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Endereco de entrega</label>
+          <input type="text" id="campo-endereco" placeholder="Rua, numero, bairro, cidade">
+        </div>
+      </div>
+
+      <!-- DATA -->
+      <div class="form-group">
+        <label>Data desejada</label>
+        <input type="date" id="campo-data" onchange="mudarData()">
+        <div id="aviso-data" style="font-size:12px;margin-top:6px;display:none;"></div>
+        <div style="font-size:11px;color:var(--gray);margin-top:5px;">Atendemos de segunda a sexta-feira</div>
+      </div>
+
+      <!-- HORARIO -->
+      <div class="form-group" id="bloco-horario" style="display:none;">
+        <label>Horario desejado</label>
+        <input type="time" id="campo-horario" onchange="validarHorario()">
+        <div id="aviso-horario" style="font-size:12px;margin-top:6px;display:none;"></div>
+        <div id="info-horario" style="font-size:11px;color:var(--gray);margin-top:5px;"></div>
+      </div>
+
+      <!-- PAGAMENTO -->
+      <div class="form-group">
+        <label>Pagamento</label>
+        <div class="opcoes">
+          <div class="opcao" id="opt-pix" onclick="escolherPagamento('pix')">
+            <span class="icon">💸</span>Pix
+          </div>
+          <div class="opcao" id="opt-cartao" onclick="escolherPagamento('cartao')">
+            <span class="icon">💳</span>Cartao
+          </div>
+        </div>
+        <div id="info-pix" class="info-box verde" style="display:none;">
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:4px;">Chave Pix - Nubank (CNPJ)</div>
+          <div class="pix-key" onclick="copiarPix()">
+            <span>63163063000189</span>
+            <span style="font-size:12px;color:var(--green);">📋 Copiar</span>
+          </div>
+          <div style="font-size:11px;margin-top:8px;">Apos o pedido, envie o comprovante pelo WhatsApp.</div>
+        </div>
+        <div id="info-cartao" class="info-box amarelo" style="display:none;">
+          💳 Pagamento via <strong>InfinitePay</strong> - cartao de credito com juros.<br>
+          <span style="font-size:11px;">O link de cobranca sera enviado pelo WhatsApp.</span>
+        </div>
+      </div>
+
+      <!-- OBS -->
+      <div class="form-group">
+        <label>Observacoes (opcional)</label>
+        <textarea id="campo-obs" rows="3" placeholder="Alguma preferencia ou informacao adicional?"></textarea>
+      </div>
+
+      <button class="submit-btn" onclick="finalizarPedido()">Finalizar pedido 🍕</button>
+
+    </div>
+  </div>
+</div>
+
+<button class="floating-cart" id="floating-cart" onclick="showTab('pedido')">
+  🛒 Ver pedido
+  <div class="cart-badge" id="cart-count">0</div>
+</button>
+
+<script>
+var pizzasSalgadas = [
+  { id: 1, nome: "Margherita Especial", desc: "Pomodori pelati San Marzano, mozzarella de bufala, pesto de manjericao artesanal e Parmesao Capa Preta ralado", preco: 55, estoque: true },
+  { id: 2, nome: "Calabresa com Gorgonzola", desc: "Pomodori pelati San Marzano, mozzarella, gorgonzola, calabresa e Parmesao Capa Preta ralado", preco: 50, estoque: true },
+  { id: 3, nome: "Linguica Blumenau com Gorgonzola", desc: "Pomodori pelati San Marzano, mozzarella, linguica Blumenau, gorgonzola e Parmesao Capa Preta ralado", preco: 50, estoque: true },
+  { id: 4, nome: "Lombinho com Catupiry e Alho Poro", desc: "Pomodori pelati San Marzano, mozzarella, lombinho defumado, catupiry, alho poro e Parmesao Capa Preta ralado", preco: 55, estoque: true },
+  { id: 5, nome: "Pepperoni", desc: "Pomodori pelati San Marzano, mozzarella, pepperoni e Parmesao Capa Preta ralado", preco: 60, estoque: true },
+  { id: 6, nome: "4 Formaggi", desc: "Pomodori pelati San Marzano, mozzarella, Parmesao Capa Preta ralado, gorgonzola e provolone", preco: 60, estoque: true },
+  { id: 7, nome: "File com Cheddar", desc: "Pomodori pelati San Marzano, mozzarella, file, cheddar e Parmesao Capa Preta ralado", preco: 55, estoque: true },
+  { id: 8, nome: "File com Gorgonzola", desc: "Pomodori pelati San Marzano, mozzarella, file, gorgonzola e Parmesao Capa Preta ralado", preco: 58, estoque: true },
+  { id: 9, nome: "Brie com Geleia de Pimenta", desc: "Pomodori pelati San Marzano, mozzarella, queijo brie e geleia de pimenta", preco: 58, estoque: true }
+];
+
+var pizzasDoces = [
+  { id: 101, nome: "Laka Oreo", desc: "Chocolate branco Laka, bolacha Oreo e leite condensado", preco: 60, estoque: true },
+  { id: 102, nome: "Chocolate Preto e Branco com Morango", desc: "Chocolate preto, chocolate branco, morango e leite condensado", preco: 60, estoque: true },
+  { id: 103, nome: "Laka com Geleia de Frutas Vermelhas e Mirtilo", desc: "Chocolate branco Laka, geleia de frutas vermelhas, mirtilo e leite condensado", preco: 60, estoque: true }
+];
+
+var carrinho = {};
+var localEscolhido = "";
+var cidadeEscolhida = "";
+var pagamentoEscolhido = "";
+
+function fmt(v) {
+  return "R$ " + v.toFixed(2).replace(".", ",");
+}
+
+function addCarrinho(id, nome, preco) {
+  if (carrinho[id]) {
+    carrinho[id].qty++;
+  } else {
+    carrinho[id] = { id: id, nome: nome, preco: preco, qty: 1 };
+  }
+  atualizarCarrinho();
+}
+
+function mudarQty(id, delta) {
+  if (!carrinho[id]) return;
+  carrinho[id].qty += delta;
+  if (carrinho[id].qty <= 0) delete carrinho[id];
+  atualizarCarrinho();
+}
+
+function atualizarCarrinho() {
+  var itens = Object.values(carrinho);
+  var count = 0;
+  for (var i = 0; i < itens.length; i++) count += itens[i].qty;
+  var subtotal = 0;
+  for (var i = 0; i < itens.length; i++) subtotal += itens[i].qty * itens[i].preco;
+  var taxa = (localEscolhido === "delivery" && cidadeEscolhida === "criciuma") ? 15 : 0;
+  var total = subtotal + taxa;
+
+  document.getElementById("cart-count").textContent = count;
+  var fc = document.getElementById("floating-cart");
+  if (count > 0) { fc.className = "floating-cart show"; } else { fc.className = "floating-cart"; }
+
+  var listEl = document.getElementById("cart-list");
+  var resumoEl = document.getElementById("cart-resumo");
+
+  if (itens.length === 0) {
+    listEl.innerHTML = '<div class="cart-empty">Nenhum item ainda. Escolha suas pizzas acima!</div>';
+    resumoEl.style.display = "none";
+    return;
+  }
+
+  var html = "";
+  for (var i = 0; i < itens.length; i++) {
+    var it = itens[i];
+    html += '<div class="cart-item">';
+    html += '<span class="cart-item-name">' + it.nome + '</span>';
+    html += '<div class="cart-item-qty">';
+    html += '<button class="qty-btn" onclick="mudarQty(' + it.id + ', -1)">-</button>';
+    html += '<span>' + it.qty + '</span>';
+    html += '<button class="qty-btn" onclick="mudarQty(' + it.id + ', 1)">+</button>';
+    html += '</div>';
+    html += '<span class="cart-item-price">' + fmt(it.qty * it.preco) + '</span>';
+    html += '</div>';
+  }
+  listEl.innerHTML = html;
+
+  var resumoHtml = '<div class="cart-subtotal"><span>Subtotal</span><span>' + fmt(subtotal) + '</span></div>';
+  if (taxa > 0) {
+    resumoHtml += '<div class="cart-taxa"><span>Taxa de entrega</span><span>' + fmt(taxa) + '</span></div>';
+  }
+  resumoHtml += '<div class="cart-total-row"><span>Total</span><span>' + fmt(total) + '</span></div>';
+  resumoEl.innerHTML = resumoHtml;
+  resumoEl.style.display = "block";
+}
+
+function renderCards(lista, containerId) {
+  var el = document.getElementById(containerId);
+  var html = "";
+  for (var i = 0; i < lista.length; i++) {
+    var p = lista[i];
+    html += '<div class="pizza-card' + (!p.estoque ? ' esgotado' : '') + '">';
+    if (!p.estoque) html += '<div class="badge-esgotado">Indisponivel</div>';
+    html += '<div class="pizza-name">' + p.nome + '</div>';
+    html += '<div class="pizza-desc">' + p.desc + '</div>';
+    html += '<div class="pizza-footer">';
+    html += '<span class="pizza-price">' + fmt(p.preco) + '</span>';
+    if (p.estoque) {
+      html += '<button class="add-btn" onclick="addCarrinho(' + p.id + ', \'' + p.nome.replace(/'/g, "") + '\', ' + p.preco + ')">+ Adicionar</button>';
+    } else {
+      html += '<button class="add-btn" disabled>Indisponivel</button>';
+    }
+    html += '</div></div>';
+  }
+  el.innerHTML = html;
+}
+
+renderCards(pizzasSalgadas, "lista-salgadas");
+renderCards(pizzasDoces, "lista-doces");
+
+function showTab(aba) {
+  document.getElementById("tab-salgadas").className = "tab" + (aba === "salgadas" ? " active" : "");
+  document.getElementById("tab-doces").className = "tab" + (aba === "doces" ? " active" : "");
+  document.getElementById("tab-pedido").className = "tab" + (aba === "pedido" ? " active" : "");
+  document.getElementById("sec-salgadas").className = "section" + (aba === "salgadas" ? " active" : "");
+  document.getElementById("sec-doces").className = "section" + (aba === "doces" ? " active" : "");
+  document.getElementById("sec-pedido").className = "section" + (aba === "pedido" ? " active" : "");
+}
+
+function escolherLocal(tipo) {
+  localEscolhido = tipo;
+  cidadeEscolhida = "";
+  document.getElementById("opt-retirada").className = "opcao" + (tipo === "retirada" ? " selected" : "");
+  document.getElementById("opt-delivery").className = "opcao" + (tipo === "delivery" ? " selected" : "");
+  document.getElementById("info-retirada").style.display = tipo === "retirada" ? "block" : "none";
+  document.getElementById("bloco-delivery").style.display = tipo === "delivery" ? "block" : "none";
+  if (tipo === "delivery") {
+    document.getElementById("opt-criciuma").className = "opcao";
+    document.getElementById("opt-outra").className = "opcao";
+    document.getElementById("info-taxa").style.display = "none";
+    document.getElementById("info-outra").style.display = "none";
+  }
+  atualizarCarrinho();
+}
+
+function escolherCidade(cidade) {
+  cidadeEscolhida = cidade;
+  document.getElementById("opt-criciuma").className = "opcao" + (cidade === "criciuma" ? " selected" : "");
+  document.getElementById("opt-outra").className = "opcao" + (cidade === "outra" ? " selected" : "");
+  document.getElementById("info-taxa").style.display = cidade === "criciuma" ? "block" : "none";
+  document.getElementById("info-outra").style.display = cidade === "outra" ? "block" : "none";
+  atualizarCarrinho();
+}
+
+function consultarFrete() {
+  var nome = document.getElementById("campo-nome").value || "Cliente";
+  var msg = "Ola! Gostaria de consultar o valor do frete para entrega fora de Criciuma. Meu nome e " + nome + ".";
+  window.open("https://wa.me/5548991307102?text=" + encodeURIComponent(msg), "_blank");
+}
+
+function mudarData() {
+  var dataEl = document.getElementById("campo-data");
+  var avisoEl = document.getElementById("aviso-data");
+  var blocoH = document.getElementById("bloco-horario");
+  var infoH = document.getElementById("info-horario");
+  var horarioEl = document.getElementById("campo-horario");
+
+  if (!dataEl.value) { blocoH.style.display = "none"; return; }
+
+  var data = new Date(dataEl.value + "T12:00:00");
+  var dia = data.getDay();
+
+  avisoEl.style.display = "block";
+
+  if (dia === 0 || dia === 6) {
+    avisoEl.style.color = "#C8181A";
+    avisoEl.textContent = "Nao atendemos aos finais de semana. Escolha de segunda a sexta-feira.";
+    dataEl.style.borderColor = "#C8181A";
+    blocoH.style.display = "none";
+    return;
+  }
+
+  dataEl.style.borderColor = "#2D7A4F";
+
+  if (dia === 5) {
+    avisoEl.style.color = "#7A5F00";
+    avisoEl.textContent = "Sexta-feira: atendemos das 09h as 17h.";
+    horarioEl.min = "09:00";
+    horarioEl.max = "17:00";
+    infoH.textContent = "Horario disponivel: 09:00 as 17:00";
+  } else {
+    avisoEl.style.color = "#2D7A4F";
+    avisoEl.textContent = "Disponivel! Atendemos das 09h as 18h.";
+    horarioEl.min = "09:00";
+    horarioEl.max = "18:00";
+    infoH.textContent = "Horario disponivel: 09:00 as 18:00";
+  }
+
+  blocoH.style.display = "block";
+  horarioEl.value = "";
+  document.getElementById("aviso-horario").style.display = "none";
+}
+
+function validarHorario() {
+  var dataEl = document.getElementById("campo-data");
+  var horarioEl = document.getElementById("campo-horario");
+  var avisoEl = document.getElementById("aviso-horario");
+  if (!horarioEl.value || !dataEl.value) return;
+
+  var data = new Date(dataEl.value + "T12:00:00");
+  var dia = data.getDay();
+  var limite = dia === 5 ? "17:00" : "18:00";
+
+  if (horarioEl.value < "09:00" || horarioEl.value > limite) {
+    avisoEl.style.display = "block";
+    avisoEl.style.color = "#C8181A";
+    avisoEl.textContent = "Horario fora do periodo de atendimento (09:00 as " + limite + ").";
+    horarioEl.style.borderColor = "#C8181A";
+  } else {
+    avisoEl.style.display = "none";
+    horarioEl.style.borderColor = "#2D7A4F";
+  }
+}
+
+function escolherPagamento(tipo) {
+  pagamentoEscolhido = tipo;
+  document.getElementById("opt-pix").className = "opcao" + (tipo === "pix" ? " selected" : "");
+  document.getElementById("opt-cartao").className = "opcao" + (tipo === "cartao" ? " selected" : "");
+  document.getElementById("info-pix").style.display = tipo === "pix" ? "block" : "none";
+  document.getElementById("info-cartao").style.display = tipo === "cartao" ? "block" : "none";
+}
+
+function copiarPix() {
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText("63163063000189");
+  }
+  alert("Chave Pix copiada!");
+}
+
+function finalizarPedido() {
+  var itens = Object.values(carrinho);
+  if (itens.length === 0) { alert("Adicione pelo menos uma pizza ao pedido!"); return; }
+
+  var nome = document.getElementById("campo-nome").value.trim();
+  if (!nome) { alert("Por favor, informe seu nome."); return; }
+
+  var fone = document.getElementById("campo-fone").value.trim();
+  if (!fone) { alert("Por favor, informe seu WhatsApp."); return; }
+
+  if (!localEscolhido) { alert("Escolha a forma de recebimento."); return; }
+
+  if (localEscolhido === "delivery") {
+    if (!cidadeEscolhida) { alert("Selecione a cidade de entrega."); return; }
+    if (cidadeEscolhida === "outra") { alert("Para entregas fora de Criciuma, consulte o frete pelo WhatsApp antes de concluir."); return; }
+    var end = document.getElementById("campo-endereco").value.trim();
+    if (!end) { alert("Por favor, informe o endereco de entrega."); return; }
+  }
+
+  var dataEl = document.getElementById("campo-data");
+  if (!dataEl.value) { alert("Por favor, escolha a data desejada."); return; }
+  var dataSel = new Date(dataEl.value + "T12:00:00");
+  var dia = dataSel.getDay();
+  if (dia === 0 || dia === 6) { alert("Nao atendemos aos finais de semana."); return; }
+
+  var horario = document.getElementById("campo-horario").value;
+  if (!horario) { alert("Por favor, escolha o horario desejado."); return; }
+  var limiteH = dia === 5 ? "17:00" : "18:00";
+  if (horario < "09:00" || horario > limiteH) {
+    alert("Horario fora do atendimento. Escolha entre 09:00 e " + limiteH + ".");
+    return;
+  }
+
+  if (!pagamentoEscolhido) { alert("Escolha a forma de pagamento."); return; }
+
+  var subtotal = 0;
+  for (var i = 0; i < itens.length; i++) subtotal += itens[i].qty * itens[i].preco;
+  var taxa = (localEscolhido === "delivery" && cidadeEscolhida === "criciuma") ? 15 : 0;
+  var total = subtotal + taxa;
+
+  var dataFmt = dataSel.toLocaleDateString("pt-BR");
+  var enderecoFinal = localEscolhido === "retirada"
+    ? "Retirada no local - Rua Emilio de Menezes, 195, Sala 102, Criciuma"
+    : "Delivery - " + document.getElementById("campo-endereco").value;
+  var pagLabel = pagamentoEscolhido === "pix"
+    ? "Pix - CNPJ: 63163063000189 (Nubank)"
+    : "Cartao de credito - InfinitePay (com juros)";
+  var obs = document.getElementById("campo-obs").value.trim();
+
+  var msg = "🍕 *Novo Pedido - Fino Palastro*\n\n";
+  msg += "👤 *Cliente:* " + nome + "\n";
+  msg += "📱 *WhatsApp:* " + fone + "\n\n";
+  msg += "*📋 Itens:*\n";
+  for (var i = 0; i < itens.length; i++) {
+    msg += "• " + itens[i].qty + "x " + itens[i].nome + " — " + fmt(itens[i].qty * itens[i].preco) + "\n";
+  }
+  msg += "\n🧾 *Subtotal:* " + fmt(subtotal) + "\n";
+  if (taxa > 0) msg += "🛵 *Taxa de entrega:* " + fmt(taxa) + "\n";
+  msg += "💰 *Total:* " + fmt(total) + "\n\n";
+  msg += "📅 *Data:* " + dataFmt + "\n";
+  msg += "⏰ *Horario:* " + horario + "\n";
+  msg += "📍 *Entrega:* " + enderecoFinal + "\n";
+  msg += "💳 *Pagamento:* " + pagLabel + "\n";
+  if (obs) msg += "\n📝 *Obs:* " + obs + "\n";
+
+  var url = "https://wa.me/5548991307102?text=" + encodeURIComponent(msg);
+  document.getElementById("wpp-link").href = url;
+
+  // Salvar pedido no Google Sheets via Apps Script
+  var itensTxt = itens.map(function(i){ return i.qty + "x " + i.nome; }).join(", ");
+  var gsParams = {
+    cliente: nome,
+    whatsapp: fone,
+    itens: itensTxt,
+    total: total,
+    entrega: dataFmt + " " + horario,
+    endereco: enderecoFinal,
+    obs: obs || ""
+  };
+  var cbName = "__gs_" + Date.now();
+  var gsUrl = "https://script.google.com/macros/s/AKfycbyKkSQj7x6ImWIBNnKtSQV1wLqOWK_yqEOUzNcmOjeOshG2GcwfNZeoSra9h4MWRz6H/exec?" +
+    Object.keys(gsParams).map(function(k){ return k + "=" + encodeURIComponent(gsParams[k]); }).join("&") +
+    "&cb=" + cbName;
+  window[cbName] = function() { delete window[cbName]; if(s.parentNode) s.parentNode.removeChild(s); };
+  var s = document.createElement("script");
+  s.onerror = function() { delete window[cbName]; if(s.parentNode) s.parentNode.removeChild(s); };
+  s.src = gsUrl;
+  document.head.appendChild(s);
+
+  document.getElementById("order-content").style.display = "none";
+  document.getElementById("success-screen").className = "success-screen show";
+  document.getElementById("floating-cart").className = "floating-cart";
+
+  var count = 3;
+  var box = document.getElementById("countdown-box");
+  box.textContent = count;
+  var timer = setInterval(function() {
+    count--;
+    box.textContent = count;
+    if (count <= 0) {
+      clearInterval(timer);
+      window.open(url, "_blank");
+    }
+  }, 1000);
+}
+
+// Bloquear datas passadas
+window.onload = function() {
+  var hoje = new Date();
+  var y = hoje.getFullYear();
+  var m = String(hoje.getMonth() + 1).padStart(2, "0");
+  var d = String(hoje.getDate()).padStart(2, "0");
+  document.getElementById("campo-data").min = y + "-" + m + "-" + d;
+};
+</script>
+</body>
+</html>
