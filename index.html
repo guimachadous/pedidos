@@ -102,6 +102,7 @@ header .tagline { font-size: 12px; color: rgba(255,255,255,0.75); margin-top: 8p
 .success-title { font-family: 'Playfair Display', serif; font-size: 26px; font-weight: 700; color: var(--green); margin-bottom: 8px; }
 .success-msg { font-size: 14px; color: var(--gray); line-height: 1.6; margin-bottom: 28px; }
 .wpp-btn { display: inline-flex; align-items: center; gap: 10px; background: #25D366; color: white; font-weight: 700; font-size: 15px; padding: 16px 28px; border-radius: 14px; text-decoration: none; box-shadow: 0 4px 16px rgba(37,211,102,0.35); }
+@keyframes spin { to { transform: rotate(360deg); } }
 </style>
 </head>
 <body>
@@ -147,6 +148,7 @@ header .tagline { font-size: 12px; color: rgba(255,255,255,0.75); margin-top: 8p
 <!-- PEDIDO -->
 <div id="sec-pedido" class="section">
 
+  <!-- Tela de sucesso Pix/WhatsApp -->
   <div class="success-screen" id="success-screen">
     <div class="success-icon">🍕</div>
     <div class="success-title">Pedido pronto!</div>
@@ -154,6 +156,19 @@ header .tagline { font-size: 12px; color: rgba(255,255,255,0.75); margin-top: 8p
     <div id="countdown-box" style="font-size:48px;font-weight:900;color:var(--red);margin:10px 0;">3</div>
     <a id="wpp-link" href="#" target="_blank" class="wpp-btn">Enviar pelo WhatsApp</a>
     <div style="font-size:12px;color:#aaa;margin-top:8px;">Se nao abrir automaticamente, clique no botao acima</div>
+  </div>
+
+  <!-- Tela de redirecionamento para pagamento com cartão -->
+  <div class="success-screen" id="payment-screen">
+    <div class="success-icon" id="payment-icon">💳</div>
+    <div class="success-title" id="payment-title">Preparando pagamento...</div>
+    <div class="success-msg" id="payment-msg">Aguarde, estamos gerando seu link de pagamento seguro.</div>
+    <div id="payment-spinner" style="margin:20px auto;width:40px;height:40px;border:4px solid #eee;border-top-color:var(--red);border-radius:50%;animation:spin 0.8s linear infinite;"></div>
+    <a id="payment-link" href="#" target="_blank" class="wpp-btn" style="display:none;background:var(--red);">💳 Ir para pagamento</a>
+    <div id="payment-error" style="display:none;margin-top:16px;">
+      <div class="info-box amarelo" style="text-align:left;">⚠️ Nao foi possivel gerar o link automaticamente. Envie o pedido pelo WhatsApp e informe que deseja pagar com cartao.</div>
+      <a id="wpp-link-fallback" href="#" target="_blank" class="wpp-btn" style="margin-top:12px;display:inline-flex;background:#25D366;">📲 Enviar pelo WhatsApp</a>
+    </div>
   </div>
 
   <div id="order-content">
@@ -612,10 +627,11 @@ function finalizarPedido() {
   msg += "💳 *Pagamento:* " + pagLabel + "\n";
   if (obs) msg += "\n📝 *Obs:* " + obs + "\n";
 
-  var url = "https://wa.me/5548991307102?text=" + encodeURIComponent(msg);
-  document.getElementById("wpp-link").href = url;
+  var wppUrl = "https://wa.me/5548991307102?text=" + encodeURIComponent(msg);
+  document.getElementById("wpp-link").href = wppUrl;
+  document.getElementById("wpp-link-fallback").href = wppUrl;
 
-  // Salvar pedido no Firebase Firestore (aparece em tempo real na gestão)
+  // Salvar pedido no Firebase Firestore
   try {
     window.__fsdb.collection('fp_pedidos').add({
       cliente: nome,
@@ -657,20 +673,67 @@ function finalizarPedido() {
   document.head.appendChild(s);
 
   document.getElementById("order-content").style.display = "none";
-  document.getElementById("success-screen").className = "success-screen show";
   document.getElementById("floating-cart").className = "floating-cart";
 
-  var count = 3;
-  var box = document.getElementById("countdown-box");
-  box.textContent = count;
-  var timer = setInterval(function() {
-    count--;
+  if (pagamentoEscolhido === "credito") {
+    // Fluxo cartão — redireciona para InfinitePay Checkout
+    document.getElementById("payment-screen").className = "success-screen show";
+
+    var orderNsu = "FP" + Date.now();
+    var ipItens = itens.map(function(i) {
+      var p = isMini(i.id) ? miniPrecoFinal : i.preco;
+      return { quantity: i.qty, price: Math.round(p * 100), description: i.nome };
+    });
+    if (taxa > 0) ipItens.push({ quantity: 1, price: Math.round(taxa * 100), description: "Taxa de entrega" });
+
+    fetch("https://api.checkout.infinitepay.io/links", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        handle: "finopalastro",
+        redirect_url: "https://pedidos.finopalastro.com.br?pago=ok",
+        order_nsu: orderNsu,
+        customer: { name: nome, phone_number: "+55" + fone.replace(/\D/g,"") },
+        items: ipItens
+      })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data && data.url) {
+        document.getElementById("payment-spinner").style.display = "none";
+        document.getElementById("payment-title").textContent = "Link gerado!";
+        document.getElementById("payment-msg").textContent = "Clique abaixo para pagar com seguranca pela InfinitePay.";
+        var lnk = document.getElementById("payment-link");
+        lnk.href = data.url;
+        lnk.style.display = "inline-flex";
+        setTimeout(function() { window.location.href = data.url; }, 1500);
+      } else {
+        throw new Error("sem url");
+      }
+    })
+    .catch(function() {
+      document.getElementById("payment-spinner").style.display = "none";
+      document.getElementById("payment-icon").textContent = "⚠️";
+      document.getElementById("payment-title").textContent = "Ops!";
+      document.getElementById("payment-error").style.display = "block";
+      document.getElementById("payment-msg").textContent = "Nao foi possivel gerar o link automatico.";
+    });
+
+  } else {
+    // Fluxo Pix — abre WhatsApp
+    document.getElementById("success-screen").className = "success-screen show";
+    var count = 3;
+    var box = document.getElementById("countdown-box");
     box.textContent = count;
-    if (count <= 0) {
-      clearInterval(timer);
-      window.open(url, "_blank");
-    }
-  }, 1000);
+    var timer = setInterval(function() {
+      count--;
+      box.textContent = count;
+      if (count <= 0) {
+        clearInterval(timer);
+        window.open(wppUrl, "_blank");
+      }
+    }, 1000);
+  }
 }
 
 // Bloquear datas passadas
@@ -680,6 +743,19 @@ window.onload = function() {
   var m = String(hoje.getMonth() + 1).padStart(2, "0");
   var d = String(hoje.getDate()).padStart(2, "0");
   document.getElementById("campo-data").min = y + "-" + m + "-" + d;
+
+  // Retorno do pagamento com cartão
+  if (window.location.search.indexOf("pago=ok") !== -1) {
+    showTab("pedido");
+    document.getElementById("order-content").style.display = "none";
+    document.getElementById("floating-cart").className = "floating-cart";
+    var ps = document.getElementById("payment-screen");
+    ps.className = "success-screen show";
+    document.getElementById("payment-spinner").style.display = "none";
+    document.getElementById("payment-icon").textContent = "✅";
+    document.getElementById("payment-title").textContent = "Pagamento realizado!";
+    document.getElementById("payment-msg").textContent = "Seu pedido foi confirmado e ja esta sendo preparado. Obrigado por comprar na Fino Palastro!";
+  }
 };
 </script>
 </body>
