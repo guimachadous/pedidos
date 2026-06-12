@@ -230,8 +230,15 @@ header .tagline { font-size: 12px; color: rgba(255,255,255,0.75); margin-top: 8p
           </div>
         </div>
         <div class="form-group">
+          <label>CEP</label>
+          <div style="display:flex;gap:10px;align-items:center;">
+            <input type="text" id="campo-cep" placeholder="00000-000" maxlength="9" oninput="formatarCep(this)" style="max-width:160px;">
+            <span id="cep-status" style="font-size:12px;color:var(--gray);"></span>
+          </div>
+        </div>
+        <div class="form-group">
           <label>Endereco de entrega</label>
-          <input type="text" id="campo-endereco" placeholder="Rua, numero, bairro, cidade">
+          <input type="text" id="campo-endereco" placeholder="Rua, numero, complemento, bairro">
         </div>
       </div>
 
@@ -277,6 +284,16 @@ header .tagline { font-size: 12px; color: rgba(255,255,255,0.75); margin-top: 8p
       </div>
 
       <!-- OBS -->
+      <!-- CUPOM -->
+      <div class="form-group">
+        <label>Cupom de desconto (opcional)</label>
+        <div style="display:flex;gap:8px;">
+          <input type="text" id="campo-cupom" placeholder="Codigo do cupom" style="text-transform:uppercase;flex:1;" oninput="this.value=this.value.toUpperCase()">
+          <button type="button" onclick="aplicarCupom()" style="background:var(--red);color:white;border:none;border-radius:12px;padding:0 18px;font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap;">Aplicar</button>
+        </div>
+        <div id="info-cupom" style="display:none;margin-top:6px;border-radius:10px;padding:10px 12px;font-size:13px;"></div>
+      </div>
+
       <div class="form-group">
         <label>Observacoes (opcional)</label>
         <textarea id="campo-obs" rows="3" placeholder="Alguma preferencia ou informacao adicional?"></textarea>
@@ -323,6 +340,12 @@ var carrinho = {};
 var localEscolhido = "";
 var cidadeEscolhida = "";
 var pagamentoEscolhido = "";
+var cupomAplicado = null;
+var cupons = {
+  "FINO10":  { tipo: "percentual", valor: 10, descricao: "10% de desconto" },
+  "FINO15":  { tipo: "percentual", valor: 15, descricao: "15% de desconto" },
+  "FRETE":   { tipo: "fixo",       valor: 15, descricao: "Frete gratis"    }
+};
 
 function fmt(v) {
   return "R$ " + v.toFixed(2).replace(".", ",");
@@ -366,6 +389,15 @@ function atualizarCarrinho() {
   }
   var taxa = (localEscolhido === "delivery" && cidadeEscolhida === "criciuma") ? 15 : 0;
   var total = subtotal + taxa;
+  var desconto = 0;
+  if (cupomAplicado) {
+    if (cupomAplicado.tipo === "percentual") {
+      desconto = parseFloat((subtotal * cupomAplicado.valor / 100).toFixed(2));
+    } else if (cupomAplicado.tipo === "fixo") {
+      desconto = Math.min(cupomAplicado.valor, total);
+    }
+    total = Math.max(0, parseFloat((total - desconto).toFixed(2)));
+  }
 
   document.getElementById("cart-count").textContent = count;
   var fc = document.getElementById("floating-cart");
@@ -406,6 +438,9 @@ function atualizarCarrinho() {
   if (taxa > 0) {
     resumoHtml += '<div class="cart-taxa"><span>Taxa de entrega</span><span>' + fmt(taxa) + '</span></div>';
   }
+  if (desconto > 0) {
+    resumoHtml += '<div class="cart-taxa"><span>Cupom <strong>' + cupomAplicado.codigo + '</strong></span><span style="color:var(--green);">-' + fmt(desconto) + '</span></div>';
+  }
   resumoHtml += '<div class="cart-total-row"><span>Total</span><span>' + fmt(total) + '</span></div>';
   resumoEl.innerHTML = resumoHtml;
   resumoEl.style.display = "block";
@@ -435,6 +470,43 @@ function renderCards(lista, containerId) {
 renderCards(pizzasSalgadas, "lista-salgadas");
 renderCards(pizzasDoces, "lista-doces");
 renderCards(miniPizzas, "lista-mini");
+
+// ── Estoque em tempo real via Firestore ──────────────────────────────────
+(function() {
+  try {
+    window.__fsdb.collection('fp_data').doc('fp_estoque_cardapio')
+      .onSnapshot(function(doc) {
+        if (!doc.exists) return;
+        var data = (doc.data()||{}).data || {};
+        aplicarEstoque(data);
+      }, function(err) {});
+  } catch(e) {}
+})();
+
+function aplicarEstoque(estoque) {
+  var todasListas = [
+    { lista: pizzasSalgadas,  containerId: 'lista-salgadas' },
+    { lista: pizzasDoces,     containerId: 'lista-doces'    },
+    { lista: miniPizzas,      containerId: 'lista-mini'     }
+  ];
+  todasListas.forEach(function(l) {
+    var alterou = false;
+    l.lista.forEach(function(p) {
+      var qtd = estoque[p.nome];
+      var novoEstoque;
+      if (qtd === undefined || qtd === null) {
+        novoEstoque = true; // sem controle = disponível
+      } else {
+        novoEstoque = qtd > 0;
+      }
+      if (p.estoque !== novoEstoque) {
+        p.estoque = novoEstoque;
+        alterou = true;
+      }
+    });
+    if (alterou) renderCards(l.lista, l.containerId);
+  });
+}
 
 function showTab(aba) {
   var abas = ["salgadas", "doces", "mini", "pedido"];
@@ -484,11 +556,22 @@ function mudarData() {
 
   if (!dataEl.value) { blocoH.style.display = "none"; return; }
 
-  var data = new Date(dataEl.value + "T12:00:00");
+  var hoje = new Date(); hoje.setHours(0,0,0,0);
+  var data = new Date(dataEl.value + "T00:00:00");
   var dia = data.getDay();
 
   avisoEl.style.display = "block";
 
+  // Data no passado
+  if (data < hoje) {
+    avisoEl.style.color = "#C8181A";
+    avisoEl.textContent = "Data no passado. Escolha uma data a partir de hoje.";
+    dataEl.style.borderColor = "#C8181A";
+    blocoH.style.display = "none";
+    return;
+  }
+
+  // Final de semana
   if (dia === 0 || dia === 6) {
     avisoEl.style.color = "#C8181A";
     avisoEl.textContent = "Nao atendemos aos finais de semana. Escolha de segunda a sexta-feira.";
@@ -499,18 +582,30 @@ function mudarData() {
 
   dataEl.style.borderColor = "#2D7A4F";
 
+  var limite = dia === 5 ? "17:00" : "18:00";
+  var isHoje = data.getTime() === hoje.getTime();
+
+  // Horario minimo: se hoje, nao pode ser no passado
+  var minHorario = "09:00";
+  if (isHoje) {
+    var agora = new Date();
+    var hh = String(agora.getHours()).padStart(2, "0");
+    var mm = String(agora.getMinutes()).padStart(2, "0");
+    var agoraStr = hh + ":" + mm;
+    if (agoraStr > minHorario) minHorario = agoraStr;
+  }
+
+  horarioEl.min = minHorario;
+  horarioEl.max = limite;
+
   if (dia === 5) {
     avisoEl.style.color = "#7A5F00";
     avisoEl.textContent = "Sexta-feira: atendemos das 09h as 17h.";
-    horarioEl.min = "09:00";
-    horarioEl.max = "17:00";
-    infoH.textContent = "Horario disponivel: 09:00 as 17:00";
+    infoH.textContent = "Horario disponivel: " + minHorario + " as 17:00";
   } else {
     avisoEl.style.color = "#2D7A4F";
-    avisoEl.textContent = "Disponivel! Atendemos das 09h as 18h.";
-    horarioEl.min = "09:00";
-    horarioEl.max = "18:00";
-    infoH.textContent = "Horario disponivel: 09:00 as 18:00";
+    avisoEl.textContent = isHoje ? "Hoje! Horario disponivel a partir das " + minHorario + "." : "Disponivel! Atendemos das 09h as 18h.";
+    infoH.textContent = "Horario disponivel: " + minHorario + " as 18:00";
   }
 
   blocoH.style.display = "block";
@@ -524,9 +619,26 @@ function validarHorario() {
   var avisoEl = document.getElementById("aviso-horario");
   if (!horarioEl.value || !dataEl.value) return;
 
-  var data = new Date(dataEl.value + "T12:00:00");
+  var hoje = new Date(); hoje.setHours(0,0,0,0);
+  var data = new Date(dataEl.value + "T00:00:00");
   var dia = data.getDay();
   var limite = dia === 5 ? "17:00" : "18:00";
+  var isHoje = data.getTime() === hoje.getTime();
+
+  // Horario no passado (somente quando é hoje)
+  if (isHoje) {
+    var agora = new Date();
+    var hh = String(agora.getHours()).padStart(2, "0");
+    var mm = String(agora.getMinutes()).padStart(2, "0");
+    var agoraStr = hh + ":" + mm;
+    if (horarioEl.value < agoraStr) {
+      avisoEl.style.display = "block";
+      avisoEl.style.color = "#C8181A";
+      avisoEl.textContent = "Esse horario ja passou. Escolha a partir das " + agoraStr + ".";
+      horarioEl.style.borderColor = "#C8181A";
+      return;
+    }
+  }
 
   if (horarioEl.value < "09:00" || horarioEl.value > limite) {
     avisoEl.style.display = "block";
@@ -547,6 +659,60 @@ function escolherPagamento(tipo) {
   document.getElementById("info-cartao").style.display = tipo === "cartao" ? "block" : "none";
 }
 
+function aplicarCupom() {
+  var codigo = document.getElementById("campo-cupom").value.trim().toUpperCase();
+  var el = document.getElementById("info-cupom");
+  if (!codigo) {
+    cupomAplicado = null;
+    el.style.display = "none";
+    atualizarCarrinho();
+    return;
+  }
+  if (cupons[codigo]) {
+    cupomAplicado = { codigo: codigo, tipo: cupons[codigo].tipo, valor: cupons[codigo].valor };
+    el.style.cssText = "display:block;background:#E8F5EE;border:2px solid #A8D5B8;color:#2D7A4F;border-radius:10px;padding:10px 12px;font-size:13px;margin-top:6px;";
+    el.innerHTML = "✅ Cupom <strong>" + codigo + "</strong> aplicado: " + cupons[codigo].descricao;
+  } else {
+    cupomAplicado = null;
+    el.style.cssText = "display:block;background:#FFF8E1;border:2px solid #FFE082;color:#7A5F00;border-radius:10px;padding:10px 12px;font-size:13px;margin-top:6px;";
+    el.innerHTML = "❌ Cupom invalido ou expirado.";
+  }
+  atualizarCarrinho();
+}
+
+function formatarCep(el) {
+  var v = el.value.replace(/\D/g, "");
+  if (v.length > 5) v = v.substring(0, 5) + "-" + v.substring(5, 8);
+  el.value = v;
+  if (v.replace(/\D/g, "").length === 8) buscarCep(v.replace(/\D/g, ""));
+}
+
+function buscarCep(cep) {
+  var statusEl = document.getElementById("cep-status");
+  statusEl.textContent = "Buscando...";
+  statusEl.style.color = "var(--gray)";
+  fetch("https://viacep.com.br/ws/" + cep + "/json/")
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.erro) {
+        statusEl.textContent = "CEP nao encontrado";
+        statusEl.style.color = "#E53E3E";
+        return;
+      }
+      var partes = [];
+      if (data.logradouro) partes.push(data.logradouro);
+      if (data.bairro) partes.push(data.bairro);
+      if (data.localidade) partes.push(data.localidade + (data.uf ? " - " + data.uf : ""));
+      document.getElementById("campo-endereco").value = partes.join(", ");
+      statusEl.textContent = "✓ Endereco encontrado";
+      statusEl.style.color = "var(--green)";
+    })
+    .catch(function() {
+      statusEl.textContent = "Erro ao buscar CEP";
+      statusEl.style.color = "#E53E3E";
+    });
+}
+
 function copiarPix() {
   if (navigator.clipboard) {
     navigator.clipboard.writeText("63163063000189");
@@ -563,6 +729,12 @@ function finalizarPedido() {
 
   var fone = document.getElementById("campo-fone").value.trim();
   if (!fone) { alert("Por favor, informe seu WhatsApp."); return; }
+  var foneDigits = fone.replace(/\D/g, "");
+  if (foneDigits.length < 10 || foneDigits.length > 11) {
+    alert("Numero de WhatsApp incompleto. Informe DDD + numero (ex: 48 99999-9999).");
+    document.getElementById("campo-fone").focus();
+    return;
+  }
 
   if (!localEscolhido) { alert("Escolha a forma de recebimento."); return; }
 
@@ -575,7 +747,9 @@ function finalizarPedido() {
 
   var dataEl = document.getElementById("campo-data");
   if (!dataEl.value) { alert("Por favor, escolha a data desejada."); return; }
-  var dataSel = new Date(dataEl.value + "T12:00:00");
+  var hoje = new Date(); hoje.setHours(0,0,0,0);
+  var dataSel = new Date(dataEl.value + "T00:00:00");
+  if (dataSel < hoje) { alert("A data escolhida e no passado. Selecione uma data a partir de hoje."); document.getElementById("campo-data").focus(); return; }
   var dia = dataSel.getDay();
   if (dia === 0 || dia === 6) { alert("Nao atendemos aos finais de semana."); return; }
 
@@ -585,6 +759,18 @@ function finalizarPedido() {
   if (horario < "09:00" || horario > limiteH) {
     alert("Horario fora do atendimento. Escolha entre 09:00 e " + limiteH + ".");
     return;
+  }
+  var isHoje = dataSel.getTime() === hoje.getTime();
+  if (isHoje) {
+    var agora = new Date();
+    var hh = String(agora.getHours()).padStart(2, "0");
+    var mm = String(agora.getMinutes()).padStart(2, "0");
+    var agoraStr = hh + ":" + mm;
+    if (horario < agoraStr) {
+      alert("O horario escolhido ja passou. Escolha a partir das " + agoraStr + ".");
+      document.getElementById("campo-horario").focus();
+      return;
+    }
   }
 
   if (!pagamentoEscolhido) { alert("Escolha a forma de pagamento."); return; }
@@ -600,6 +786,15 @@ function finalizarPedido() {
   }
   var taxa = (localEscolhido === "delivery" && cidadeEscolhida === "criciuma") ? 15 : 0;
   var total = subtotal + taxa;
+  var desconto = 0;
+  if (cupomAplicado) {
+    if (cupomAplicado.tipo === "percentual") {
+      desconto = parseFloat((subtotal * cupomAplicado.valor / 100).toFixed(2));
+    } else if (cupomAplicado.tipo === "fixo") {
+      desconto = Math.min(cupomAplicado.valor, total);
+    }
+    total = Math.max(0, parseFloat((total - desconto).toFixed(2)));
+  }
 
   var dataFmt = dataSel.toLocaleDateString("pt-BR");
   var enderecoFinal = localEscolhido === "retirada"
@@ -620,6 +815,7 @@ function finalizarPedido() {
   }
   msg += "\n🧾 *Subtotal:* " + fmt(subtotal) + "\n";
   if (taxa > 0) msg += "🛵 *Taxa de entrega:* " + fmt(taxa) + "\n";
+  if (desconto > 0) msg += "🎟️ *Cupom " + cupomAplicado.codigo + ":* -" + fmt(desconto) + "\n";
   msg += "💰 *Total:* " + fmt(total) + "\n\n";
   msg += "📅 *Data:* " + dataFmt + "\n";
   msg += "⏰ *Horario:* " + horario + "\n";
