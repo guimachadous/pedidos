@@ -686,7 +686,7 @@ function finalizarPedido() {
     });
     if (taxa > 0) ipItens.push({ quantity: 1, price: Math.round(taxa * 100), description: "Taxa de entrega" });
 
-    fetch("https://api.checkout.infinitepay.io/links", {
+    fetch("https://shrill-darkness-225b.guimachadous.workers.dev", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
