@@ -116,6 +116,7 @@ header .tagline { font-size: 12px; color: rgba(255,255,255,0.75); margin-top: 8p
 <div class="tabs">
   <div class="tab active" id="tab-salgadas" onclick="showTab('salgadas')">Salgadas</div>
   <div class="tab" id="tab-doces" onclick="showTab('doces')">Doces</div>
+  <div class="tab" id="tab-mini" onclick="showTab('mini')">Mini 🍕</div>
   <div class="tab" id="tab-pedido" onclick="showTab('pedido')">Pedido</div>
 </div>
 
@@ -131,6 +132,16 @@ header .tagline { font-size: 12px; color: rgba(255,255,255,0.75); margin-top: 8p
   <p class="section-title">Pizzas Doces</p>
   <p class="section-sub">Para adocar qualquer dia da semana</p>
   <div id="lista-doces"></div>
+</div>
+
+<!-- MINI PIZZAS -->
+<div id="sec-mini" class="section">
+  <p class="section-title">Mini Pizzas</p>
+  <p class="section-sub">Porcao individual · Perfeitas para eventos e reunioes</p>
+  <div class="info-box amarelo" style="margin-bottom:18px;">
+    🎉 <strong>Promocao Kit:</strong> Na compra de <strong>10 ou mais mini pizzas</strong>, o valor cai de R$ 15,00 para apenas <strong>R$ 12,50 cada</strong>! O desconto e aplicado automaticamente no pedido.
+  </div>
+  <div id="lista-mini"></div>
 </div>
 
 <!-- PEDIDO -->
@@ -271,13 +282,20 @@ header .tagline { font-size: 12px; color: rgba(255,255,255,0.75); margin-top: 8p
 var pizzasSalgadas = [
   { id: 1, nome: "Margherita Especial", desc: "Pomodori pelati San Marzano, mozzarella de bufala, pesto de manjericao artesanal e Parmesao Capa Preta ralado", preco: 55, estoque: true },
   { id: 2, nome: "Calabresa com Gorgonzola", desc: "Pomodori pelati San Marzano, mozzarella, gorgonzola, calabresa e Parmesao Capa Preta ralado", preco: 50, estoque: true },
-  { id: 3, nome: "Linguica Blumenau com Gorgonzola", desc: "Pomodori pelati San Marzano, mozzarella, linguica Blumenau, gorgonzola e Parmesao Capa Preta ralado", preco: 50, estoque: true },
-  { id: 4, nome: "Lombinho com Catupiry e Alho Poro", desc: "Pomodori pelati San Marzano, mozzarella, lombinho defumado, catupiry, alho poro e Parmesao Capa Preta ralado", preco: 55, estoque: true },
-  { id: 5, nome: "Pepperoni", desc: "Pomodori pelati San Marzano, mozzarella, pepperoni e Parmesao Capa Preta ralado", preco: 60, estoque: true },
-  { id: 6, nome: "4 Formaggi", desc: "Pomodori pelati San Marzano, mozzarella, Parmesao Capa Preta ralado, gorgonzola e provolone", preco: 60, estoque: true },
-  { id: 7, nome: "File com Cheddar", desc: "Pomodori pelati San Marzano, mozzarella, file, cheddar e Parmesao Capa Preta ralado", preco: 55, estoque: true },
-  { id: 8, nome: "File com Gorgonzola", desc: "Pomodori pelati San Marzano, mozzarella, file, gorgonzola e Parmesao Capa Preta ralado", preco: 58, estoque: true },
+  { id: 3, nome: "Linguica Blumenau com Gorgonzola", desc: "Pomodori pelati San Marzano, mozzarella, linguica Blumenau, gorgonzola e Parmesao Capa Preta ralado", preco: 58, estoque: true },
+  { id: 4, nome: "Lombinho com Catupiry e Alho Poro", desc: "Pomodori pelati San Marzano, mozzarella, lombinho defumado, catupiry, alho poro e Parmesao Capa Preta ralado", preco: 50, estoque: true },
+  { id: 5, nome: "Pepperoni", desc: "Pomodori pelati San Marzano, mozzarella, pepperoni e Parmesao Capa Preta ralado", preco: 55, estoque: true },
+  { id: 6, nome: "4 Formaggi", desc: "Pomodori pelati San Marzano, mozzarella, Parmesao Capa Preta ralado, gorgonzola e provolone", preco: 55, estoque: true },
+  { id: 7, nome: "File com Cheddar", desc: "Pomodori pelati San Marzano, mozzarella, file, cheddar e Parmesao Capa Preta ralado", preco: 60, estoque: true },
+  { id: 8, nome: "File com Gorgonzola", desc: "Pomodori pelati San Marzano, mozzarella, file, gorgonzola e Parmesao Capa Preta ralado", preco: 60, estoque: true },
   { id: 9, nome: "Brie com Geleia de Pimenta", desc: "Pomodori pelati San Marzano, mozzarella, queijo brie e geleia de pimenta", preco: 58, estoque: true }
+];
+
+var miniPizzas = [
+  { id: 201, nome: "Mini Margherita Especial", desc: "Pomodori pelati San Marzano, mozzarella de bufala, pesto de manjericao artesanal e Parmesao Capa Preta ralado", preco: 15, estoque: true },
+  { id: 202, nome: "Mini Lombinho com Catupiry e Alho Poro", desc: "Pomodori pelati San Marzano, mozzarella, lombinho defumado, catupiry, alho poro e Parmesao Capa Preta ralado", preco: 15, estoque: true },
+  { id: 203, nome: "Mini Brie com Geleia de Pimenta", desc: "Pomodori pelati San Marzano, mozzarella, queijo brie e geleia de pimenta", preco: 15, estoque: true },
+  { id: 204, nome: "Mini Calabresa com Gorgonzola", desc: "Pomodori pelati San Marzano, mozzarella, gorgonzola, calabresa e Parmesao Capa Preta ralado", preco: 15, estoque: true }
 ];
 
 var pizzasDoces = [
@@ -311,12 +329,26 @@ function mudarQty(id, delta) {
   atualizarCarrinho();
 }
 
+function isMini(id) { return id >= 200; }
+
 function atualizarCarrinho() {
   var itens = Object.values(carrinho);
   var count = 0;
   for (var i = 0; i < itens.length; i++) count += itens[i].qty;
+
+  // Mini pizza discount: 10+ unidades = R$12,50 cada
+  var miniQtyTotal = 0;
+  for (var i = 0; i < itens.length; i++) {
+    if (isMini(itens[i].id)) miniQtyTotal += itens[i].qty;
+  }
+  var miniPreco = miniQtyTotal >= 10 ? 12.50 : 15;
+  var temDesconto = miniQtyTotal >= 10;
+
   var subtotal = 0;
-  for (var i = 0; i < itens.length; i++) subtotal += itens[i].qty * itens[i].preco;
+  for (var i = 0; i < itens.length; i++) {
+    var p = isMini(itens[i].id) ? miniPreco : itens[i].preco;
+    subtotal += itens[i].qty * p;
+  }
   var taxa = (localEscolhido === "delivery" && cidadeEscolhida === "criciuma") ? 15 : 0;
   var total = subtotal + taxa;
 
@@ -334,16 +366,23 @@ function atualizarCarrinho() {
   }
 
   var html = "";
+  if (temDesconto) {
+    html += '<div class="info-box verde" style="margin-bottom:10px;">🎉 Desconto de kit aplicado! Mini pizzas por <strong>R$ 12,50</strong> cada.</div>';
+  } else if (miniQtyTotal > 0) {
+    var faltam = 10 - miniQtyTotal;
+    html += '<div class="info-box amarelo" style="margin-bottom:10px;">🍕 Adicione mais <strong>' + faltam + ' mini pizza' + (faltam > 1 ? 's' : '') + '</strong> para ganhar o desconto de kit (R$ 12,50 cada)!</div>';
+  }
   for (var i = 0; i < itens.length; i++) {
     var it = itens[i];
+    var p = isMini(it.id) ? miniPreco : it.preco;
     html += '<div class="cart-item">';
-    html += '<span class="cart-item-name">' + it.nome + '</span>';
+    html += '<span class="cart-item-name">' + it.nome + (isMini(it.id) && temDesconto ? ' <span style="font-size:11px;color:var(--green)">✓ Kit</span>' : '') + '</span>';
     html += '<div class="cart-item-qty">';
     html += '<button class="qty-btn" onclick="mudarQty(' + it.id + ', -1)">-</button>';
     html += '<span>' + it.qty + '</span>';
     html += '<button class="qty-btn" onclick="mudarQty(' + it.id + ', 1)">+</button>';
     html += '</div>';
-    html += '<span class="cart-item-price">' + fmt(it.qty * it.preco) + '</span>';
+    html += '<span class="cart-item-price">' + fmt(it.qty * p) + '</span>';
     html += '</div>';
   }
   listEl.innerHTML = html;
@@ -380,14 +419,14 @@ function renderCards(lista, containerId) {
 
 renderCards(pizzasSalgadas, "lista-salgadas");
 renderCards(pizzasDoces, "lista-doces");
+renderCards(miniPizzas, "lista-mini");
 
 function showTab(aba) {
-  document.getElementById("tab-salgadas").className = "tab" + (aba === "salgadas" ? " active" : "");
-  document.getElementById("tab-doces").className = "tab" + (aba === "doces" ? " active" : "");
-  document.getElementById("tab-pedido").className = "tab" + (aba === "pedido" ? " active" : "");
-  document.getElementById("sec-salgadas").className = "section" + (aba === "salgadas" ? " active" : "");
-  document.getElementById("sec-doces").className = "section" + (aba === "doces" ? " active" : "");
-  document.getElementById("sec-pedido").className = "section" + (aba === "pedido" ? " active" : "");
+  var abas = ["salgadas", "doces", "mini", "pedido"];
+  for (var i = 0; i < abas.length; i++) {
+    document.getElementById("tab-" + abas[i]).className = "tab" + (aba === abas[i] ? " active" : "");
+    document.getElementById("sec-" + abas[i]).className = "section" + (aba === abas[i] ? " active" : "");
+  }
 }
 
 function escolherLocal(tipo) {
@@ -535,8 +574,15 @@ function finalizarPedido() {
 
   if (!pagamentoEscolhido) { alert("Escolha a forma de pagamento."); return; }
 
+  var miniQtyTotal = 0;
+  for (var i = 0; i < itens.length; i++) { if (isMini(itens[i].id)) miniQtyTotal += itens[i].qty; }
+  var miniPrecoFinal = miniQtyTotal >= 10 ? 12.50 : 15;
+
   var subtotal = 0;
-  for (var i = 0; i < itens.length; i++) subtotal += itens[i].qty * itens[i].preco;
+  for (var i = 0; i < itens.length; i++) {
+    var p = isMini(itens[i].id) ? miniPrecoFinal : itens[i].preco;
+    subtotal += itens[i].qty * p;
+  }
   var taxa = (localEscolhido === "delivery" && cidadeEscolhida === "criciuma") ? 15 : 0;
   var total = subtotal + taxa;
 
@@ -554,7 +600,8 @@ function finalizarPedido() {
   msg += "📱 *WhatsApp:* " + fone + "\n\n";
   msg += "*📋 Itens:*\n";
   for (var i = 0; i < itens.length; i++) {
-    msg += "• " + itens[i].qty + "x " + itens[i].nome + " — " + fmt(itens[i].qty * itens[i].preco) + "\n";
+    var p = isMini(itens[i].id) ? miniPrecoFinal : itens[i].preco;
+    msg += "• " + itens[i].qty + "x " + itens[i].nome + " — " + fmt(itens[i].qty * p) + "\n";
   }
   msg += "\n🧾 *Subtotal:* " + fmt(subtotal) + "\n";
   if (taxa > 0) msg += "🛵 *Taxa de entrega:* " + fmt(taxa) + "\n";
@@ -573,7 +620,7 @@ function finalizarPedido() {
     window.__fsdb.collection('fp_pedidos').add({
       cliente: nome,
       whatsapp: fone,
-      itens: itens.map(function(i){ return {nome:i.nome, qty:i.qty, preco:i.preco}; }),
+      itens: itens.map(function(i){ return {nome:i.nome, qty:i.qty, preco: isMini(i.id) ? miniPrecoFinal : i.preco}; }),
       subtotal: subtotal,
       taxa: taxa,
       total: total,
