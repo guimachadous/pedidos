@@ -675,7 +675,7 @@ function finalizarPedido() {
   document.getElementById("order-content").style.display = "none";
   document.getElementById("floating-cart").className = "floating-cart";
 
-  if (pagamentoEscolhido === "credito") {
+  if (pagamentoEscolhido === "cartao") {
     // Fluxo cartão — redireciona para InfinitePay Checkout
     document.getElementById("payment-screen").className = "success-screen show";
 
