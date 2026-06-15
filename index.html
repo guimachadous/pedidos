@@ -910,14 +910,14 @@ function finalizarPedido() {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': 'Key os_v2_app_4cnyh25x2fbrxf3vxci34petgx7wicfmhwyuyte4ao5tljg5bcuwreiuvdsdv6hjpenvi56lrkkqvfbopanmzidwdprpczstcz3igoi'
+        'Authorization': 'Key os_v2_app_sbc5hl65obgbnjebfeljm5m6qxfc3bb2vybunquan4j6y4lxxxhsx4l6qvkknh5jwimihezbqocuddwyr7a4gjccftuohlifwghplya'
       },
       body: JSON.stringify({
-        app_id: 'e09b83eb-b7d1-431b-9775-b891be3c9335',
+        app_id: '9045d3af-dd70-4c16-a481-291696759e85',
         included_segments: ['Total Subscriptions'],
         headings: { en: '🍕 Novo pedido de ' + nome + '!' },
         contents: { en: 'Total: R$ ' + total.toFixed(2).replace('.', ',') + ' — abra o app para ver' },
-        url: 'https://guimachadous.github.io/fino-palastro/index.html'
+        url: 'https://gestao.finopalastro.com.br/index.html'
       })
     }).catch(function(){});
   } catch(e) {}
