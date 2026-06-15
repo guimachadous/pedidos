@@ -904,6 +904,24 @@ function finalizarPedido() {
     });
   } catch(e) {}
 
+  // Notificação push via OneSignal (funciona mesmo com tela bloqueada)
+  try {
+    fetch('https://api.onesignal.com/notifications', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Key os_v2_app_4cnyh25x2fbrxf3vxci34petgx7wicfmhwyuyte4ao5tljg5bcuwreiuvdsdv6hjpenvi56lrkkqvfbopanmzidwdprpczstcz3igoi'
+      },
+      body: JSON.stringify({
+        app_id: 'e09b83eb-b7d1-431b-9775-b891be3c9335',
+        included_segments: ['Total Subscriptions'],
+        headings: { en: '🍕 Novo pedido de ' + nome + '!' },
+        contents: { en: 'Total: R$ ' + total.toFixed(2).replace('.', ',') + ' — abra o app para ver' },
+        url: 'https://guimachadous.github.io/fino-palastro/index.html'
+      })
+    }).catch(function(){});
+  } catch(e) {}
+
   // Salvar pedido no Google Sheets via Apps Script
   var itensTxt = itens.map(function(i){ return i.qty + "x " + i.nome; }).join(", ");
   var gsParams = {
