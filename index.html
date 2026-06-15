@@ -904,7 +904,7 @@ function finalizarPedido() {
     });
   } catch(e) {}
 
-  // Notificação push via OneSignal (roteado pelo worker para evitar CORS)
+  // Notificação push via OneSignal (roteado pelo worker para evitar CORS) 
   try {
     fetch('https://shrill-darkness-225b.guimachadous.workers.dev/notify', {
       method: 'POST',
