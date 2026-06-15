@@ -904,14 +904,11 @@ function finalizarPedido() {
     });
   } catch(e) {}
 
-  // Notificação push via OneSignal (funciona mesmo com tela bloqueada)
+  // Notificação push via OneSignal (roteado pelo worker para evitar CORS)
   try {
-    fetch('https://api.onesignal.com/notifications', {
+    fetch('https://shrill-darkness-225b.guimachadous.workers.dev/notify', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Key os_v2_app_sbc5hl65obgbnjebfeljm5m6qxfc3bb2vybunquan4j6y4lxxxhsx4l6qvkknh5jwimihezbqocuddwyr7a4gjccftuohlifwghplya'
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         app_id: '9045d3af-dd70-4c16-a481-291696759e85',
         included_segments: ['Total Subscriptions'],
