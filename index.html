@@ -933,12 +933,18 @@ function finalizarPedido() {
     document.getElementById("payment-screen").className = "success-screen show";
 
     var orderNsu = "FP" + Date.now();
-    var ipItens = itens.map(function(i) {
-      var p = isMini(i.id) ? miniPrecoFinal : i.preco;
-      return { quantity: i.qty, price: Math.round(p * 100), description: i.nome };
-    });
-    if (taxa > 0) ipItens.push({ quantity: 1, price: Math.round(taxa * 100), description: "Taxa de entrega" });
-    if (desconto > 0) ipItens.push({ quantity: 1, price: -Math.round(desconto * 100), description: "Desconto (" + cupomAplicado.codigo + ")" });
+    var ipItens;
+    if (desconto > 0) {
+      // InfinitePay não suporta preço negativo — envia item único com total já descontado
+      var descLabel = "Pedido Fino Palastro (cupom " + cupomAplicado.codigo + " aplicado)";
+      ipItens = [{ quantity: 1, price: Math.round(total * 100), description: descLabel }];
+    } else {
+      ipItens = itens.map(function(i) {
+        var p = isMini(i.id) ? miniPrecoFinal : i.preco;
+        return { quantity: i.qty, price: Math.round(p * 100), description: i.nome };
+      });
+      if (taxa > 0) ipItens.push({ quantity: 1, price: Math.round(taxa * 100), description: "Taxa de entrega" });
+    }
 
     fetch("https://shrill-darkness-225b.guimachadous.workers.dev", {
       method: "POST",
