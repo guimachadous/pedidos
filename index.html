@@ -189,8 +189,9 @@ header .tagline { font-size: 12px; color: rgba(255,255,255,0.75); margin-top: 8p
       </div>
 
       <div class="form-group">
-        <label>WhatsApp</label>
-        <input type="tel" id="campo-fone" placeholder="(48) 99999-9999">
+        <label>WhatsApp *</label>
+        <input type="tel" id="campo-fone" placeholder="(48) 99999-9999" maxlength="16" oninput="formatarFone(this)">
+        <div id="fone-aviso" style="font-size:12px;color:#E53E3E;margin-top:5px;display:none;">Numero incompleto. Informe DDD + 9 digitos.</div>
       </div>
 
       <!-- RECEBIMENTO -->
@@ -238,7 +239,21 @@ header .tagline { font-size: 12px; color: rgba(255,255,255,0.75); margin-top: 8p
         </div>
         <div class="form-group">
           <label>Endereco de entrega</label>
-          <input type="text" id="campo-endereco" placeholder="Rua, numero, complemento, bairro">
+          <input type="text" id="campo-endereco" placeholder="Rua e bairro (preenchido pelo CEP)">
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div class="form-group" style="margin-bottom:0;">
+            <label>Numero *</label>
+            <input type="text" id="campo-numero" placeholder="Ex: 123">
+          </div>
+          <div class="form-group" style="margin-bottom:0;">
+            <label>Complemento</label>
+            <input type="text" id="campo-complemento" placeholder="Apto, casa, bloco...">
+          </div>
+        </div>
+        <div class="form-group" style="margin-top:12px;">
+          <label>Ponto de referencia</label>
+          <input type="text" id="campo-referencia" placeholder="Ex: Proximo ao Mercado X">
         </div>
       </div>
 
@@ -680,6 +695,29 @@ function aplicarCupom() {
   atualizarCarrinho();
 }
 
+function formatarFone(el) {
+  var v = el.value.replace(/\D/g, "").slice(0, 11);
+  if (v.length <= 2) {
+    el.value = v.length ? "(" + v : "";
+  } else if (v.length <= 7) {
+    el.value = "(" + v.slice(0,2) + ") " + v.slice(2);
+  } else {
+    el.value = "(" + v.slice(0,2) + ") " + v.slice(2,7) + "-" + v.slice(7);
+  }
+  var aviso = document.getElementById("fone-aviso");
+  var digits = v.replace(/\D/g,"");
+  if (digits.length > 0 && digits.length < 11) {
+    aviso.style.display = "block";
+    el.style.borderColor = "#E53E3E";
+  } else if (digits.length === 11) {
+    aviso.style.display = "none";
+    el.style.borderColor = "#2D7A4F";
+  } else {
+    aviso.style.display = "none";
+    el.style.borderColor = "";
+  }
+}
+
 function formatarCep(el) {
   var v = el.value.replace(/\D/g, "");
   if (v.length > 5) v = v.substring(0, 5) + "-" + v.substring(5, 8);
@@ -728,11 +766,13 @@ function finalizarPedido() {
   if (!nome) { alert("Por favor, informe seu nome."); return; }
 
   var fone = document.getElementById("campo-fone").value.trim();
-  if (!fone) { alert("Por favor, informe seu WhatsApp."); return; }
+  if (!fone) { alert("Por favor, informe seu WhatsApp."); document.getElementById("campo-fone").focus(); return; }
   var foneDigits = fone.replace(/\D/g, "");
-  if (foneDigits.length < 10 || foneDigits.length > 11) {
-    alert("Numero de WhatsApp incompleto. Informe DDD + numero (ex: 48 99999-9999).");
+  if (foneDigits.length !== 11) {
+    alert("Numero de WhatsApp incompleto!\n\nInforme DDD + 9 digitos.\nExemplo: (48) 99999-9999");
     document.getElementById("campo-fone").focus();
+    document.getElementById("fone-aviso").style.display = "block";
+    document.getElementById("campo-fone").style.borderColor = "#E53E3E";
     return;
   }
 
@@ -743,6 +783,8 @@ function finalizarPedido() {
     if (cidadeEscolhida === "outra") { alert("Para entregas fora de Criciuma, consulte o frete pelo WhatsApp antes de concluir."); return; }
     var end = document.getElementById("campo-endereco").value.trim();
     if (!end) { alert("Por favor, informe o endereco de entrega."); return; }
+    var num = document.getElementById("campo-numero").value.trim();
+    if (!num) { alert("Por favor, informe o numero do endereco."); document.getElementById("campo-numero").focus(); return; }
   }
 
   var dataEl = document.getElementById("campo-data");
@@ -797,9 +839,18 @@ function finalizarPedido() {
   }
 
   var dataFmt = dataSel.toLocaleDateString("pt-BR");
-  var enderecoFinal = localEscolhido === "retirada"
-    ? "Retirada no local - Rua Emilio de Menezes, 195, Sala 102, Criciuma"
-    : "Delivery - " + document.getElementById("campo-endereco").value;
+  var enderecoFinal;
+  if (localEscolhido === "retirada") {
+    enderecoFinal = "Retirada no local - Rua Emilio de Menezes, 195, Sala 102, Criciuma";
+  } else {
+    var _rua   = document.getElementById("campo-endereco").value.trim();
+    var _num   = document.getElementById("campo-numero").value.trim();
+    var _comp  = document.getElementById("campo-complemento").value.trim();
+    var _ref   = document.getElementById("campo-referencia").value.trim();
+    enderecoFinal = "Delivery - " + _rua + ", " + _num
+      + (_comp ? ", " + _comp : "")
+      + (_ref  ? " (Ref: " + _ref + ")" : "");
+  }
   var pagLabel = pagamentoEscolhido === "pix"
     ? "Pix - CNPJ: 63163063000189 (Nubank)"
     : "Cartao de credito - InfinitePay (com juros)";
@@ -837,7 +888,13 @@ function finalizarPedido() {
       taxa: taxa,
       total: total,
       local: localEscolhido,
-      endereco: localEscolhido==='delivery' ? document.getElementById("campo-endereco").value : 'Retirada no local',
+      endereco: enderecoFinal,
+      enderecoDetalhes: localEscolhido==='delivery' ? {
+        rua:          document.getElementById("campo-endereco").value.trim(),
+        numero:       document.getElementById("campo-numero").value.trim(),
+        complemento:  document.getElementById("campo-complemento").value.trim(),
+        referencia:   document.getElementById("campo-referencia").value.trim()
+      } : null,
       data: dataFmt,
       horario: horario,
       pagamento: pagamentoEscolhido,
@@ -881,6 +938,7 @@ function finalizarPedido() {
       return { quantity: i.qty, price: Math.round(p * 100), description: i.nome };
     });
     if (taxa > 0) ipItens.push({ quantity: 1, price: Math.round(taxa * 100), description: "Taxa de entrega" });
+    if (desconto > 0) ipItens.push({ quantity: 1, price: -Math.round(desconto * 100), description: "Desconto (" + cupomAplicado.codigo + ")" });
 
     fetch("https://shrill-darkness-225b.guimachadous.workers.dev", {
       method: "POST",
