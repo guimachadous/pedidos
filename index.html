@@ -487,12 +487,14 @@ renderCards(pizzasDoces, "lista-doces");
 renderCards(miniPizzas, "lista-mini");
 
 // ── Estoque em tempo real via Firestore ──────────────────────────────────
+var ultimoEstoqueData = {};
 (function() {
   try {
     window.__fsdb.collection('fp_data').doc('fp_estoque_cardapio')
       .onSnapshot(function(doc) {
         if (!doc.exists) return;
         var data = (doc.data()||{}).data || {};
+        ultimoEstoqueData = data;
         aplicarEstoque(data);
       }, function(err) {});
   } catch(e) {}
@@ -521,6 +523,42 @@ function aplicarEstoque(estoque) {
     });
     if (alterou) renderCards(l.lista, l.containerId);
   });
+}
+
+// ── Catálogo de sabores em tempo real via Firestore (sincronizado com a aba "Estoque" da gestão) ──
+// Sempre que um sabor é criado, editado ou excluído na gestão, este cardápio é atualizado automaticamente:
+// nome, preço, descrição e existência do sabor. A disponibilidade (estoque) continua controlada
+// separadamente pelo listener de fp_estoque_cardapio acima.
+(function() {
+  try {
+    window.__fsdb.collection('fp_data').doc('fp_sabores')
+      .onSnapshot(function(doc) {
+        if (!doc.exists) return;
+        var sabores = (doc.data()||{}).data || [];
+        if (!Array.isArray(sabores) || sabores.length === 0) return;
+        aplicarCatalogoSabores(sabores);
+      }, function(err) {});
+  } catch(e) {}
+})();
+
+function aplicarCatalogoSabores(sabores) {
+  function estoqueFor(nome) {
+    var qtd = ultimoEstoqueData[nome];
+    if (qtd === undefined || qtd === null) return true; // sem controle = disponível
+    return qtd > 0;
+  }
+  function montarLista(cat, base) {
+    return sabores.filter(function(s) { return s.cat === cat; }).map(function(s, i) {
+      return { id: base + i + 1, nome: s.nome, desc: s.desc || '', preco: s.preco, estoque: estoqueFor(s.nome) };
+    });
+  }
+  pizzasSalgadas = montarLista('grande', 0);   // ids 1..99
+  pizzasDoces    = montarLista('doce', 100);   // ids 101..199
+  miniPizzas     = montarLista('mini', 200);   // ids 201..299
+
+  renderCards(pizzasSalgadas, "lista-salgadas");
+  renderCards(pizzasDoces, "lista-doces");
+  renderCards(miniPizzas, "lista-mini");
 }
 
 function showTab(aba) {
