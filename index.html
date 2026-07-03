@@ -33,10 +33,11 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: 'Inter', sans-serif; background: var(--cream); color: var(--charcoal); min-height: 100vh; }
 
-header { background: url('fundo-header.jpeg') center center / cover no-repeat; padding: 32px 20px 22px; text-align: center; position: relative; }
-header::before { content: ''; position: absolute; inset: 0; background: rgba(0,0,0,0.42); }
-header .logo-img { width: min(300px, 75vw); display: block; margin: 0 auto; filter: brightness(0) invert(1); position: relative; z-index: 1; }
-header .tagline { font-size: 12px; color: rgba(255,255,255,0.82); margin-top: 8px; position: relative; z-index: 1; }
+header { background: #FFFFFF; padding: 14px 20px 10px; text-align: center; }
+header .logo-img { width: min(300px, 75vw); display: block; margin: 0 auto; mix-blend-mode: multiply; }
+.hero-banner { background: url('fundo-header.jpeg') center 55% / cover no-repeat; position: relative; height: 150px; display: flex; align-items: center; justify-content: center; }
+.hero-banner::before { content: ''; position: absolute; inset: 0; background: rgba(0,0,0,0.48); }
+.hero-tagline { position: relative; z-index: 1; color: rgba(255,255,255,0.90); font-size: 13px; letter-spacing: 0.5px; text-align: center; }
 .info-banner { background: var(--red-dark); color: white; font-size: 12px; text-align: center; padding: 8px 16px; }
 
 .tabs { display: flex; background: var(--white); border-bottom: 2px solid var(--light); position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
@@ -126,8 +127,10 @@ header .tagline { font-size: 12px; color: rgba(255,255,255,0.82); margin-top: 8p
 
 <header>
   <img src="Logo.jpeg" alt="Fino Palastro" class="logo-img">
-  <div class="tagline">Pizzas Napolitanas pre-assadas · Criciuma</div>
 </header>
+<div class="hero-banner">
+  <div class="hero-tagline">Pizzas Napolitanas pre-assadas · Criciuma</div>
+</div>
 <div class="info-banner">Com pizza, coisas boas acontecem ate na terca-feira.</div>
 
 <div class="tabs">
@@ -1132,4 +1135,4 @@ window.onload = function() {
     document.getElementById("payment-spinner").style.display = "none";
     document.getElementById("payment-icon").textContent = "✅";
     document.getElementById("payment-title").textContent = "Pagamento realizado!";
-    document.getElementById("payment-msg").textContent = "Seu pedido foi confirmado e ja esta sendo preparado. Obrigado por comprar na Fino Palastro!"
+    docume
