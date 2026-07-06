@@ -33,11 +33,10 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: 'Inter', sans-serif; background: var(--cream); color: var(--charcoal); min-height: 100vh; }
 
-header { background: #FFFFFF; padding: 14px 20px 10px; text-align: center; }
-header .logo-img { width: min(300px, 75vw); display: block; margin: 0 auto; mix-blend-mode: multiply; }
-.hero-banner { background: url('fundo-header.jpeg') center 55% / cover no-repeat; position: relative; height: 150px; display: flex; align-items: center; justify-content: center; }
-.hero-banner::before { content: ''; position: absolute; inset: 0; background: rgba(0,0,0,0.48); }
-.hero-tagline { position: relative; z-index: 1; color: rgba(255,255,255,0.90); font-size: 13px; letter-spacing: 0.5px; text-align: center; }
+.hero-banner { background: url('fundo-header.jpeg') center 40% / cover no-repeat; position: relative; min-height: 260px; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 28px 20px 22px; gap: 12px; }
+.hero-banner::before { content: ''; position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(255,255,255,0.97) 0%, rgba(255,255,255,0.55) 42%, rgba(0,0,0,0) 65%, rgba(0,0,0,0.42) 100%); }
+.hero-logo { position: relative; z-index: 2; width: min(200px, 54vw); display: block; }
+.hero-tagline { position: relative; z-index: 2; color: rgba(255,255,255,0.95); font-size: 13px; letter-spacing: 0.5px; text-align: center; text-shadow: 0 1px 5px rgba(0,0,0,0.7); }
 .info-banner { background: var(--red-dark); color: white; font-size: 12px; text-align: center; padding: 8px 16px; }
 
 .tabs { display: flex; background: var(--white); border-bottom: 2px solid var(--light); position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
@@ -125,10 +124,8 @@ header .logo-img { width: min(300px, 75vw); display: block; margin: 0 auto; mix-
 </head>
 <body>
 
-<header>
-  <img src="Logo.jpeg" alt="Fino Palastro" class="logo-img">
-</header>
 <div class="hero-banner">
+  <img src="Logo.jpeg" alt="Fino Palastro" class="hero-logo">
   <div class="hero-tagline">Pizzas Napolitanas pre-assadas · Criciuma</div>
 </div>
 <div class="info-banner">Com pizza, coisas boas acontecem ate na terca-feira.</div>
@@ -620,9 +617,14 @@ function aplicarCatalogoSabores(sabores) {
       return { id: base + i + 1, nome: s.nome, desc: s.desc || '', preco: s.preco, estoque: estoqueFor(s.nome) };
     });
   }
-  pizzasSalgadas = montarLista('grande', 0);   // ids 1..99
-  pizzasDoces    = montarLista('doce', 100);   // ids 101..199
-  miniPizzas     = montarLista('mini', 200);   // ids 201..299
+  var novasSalgadas = montarLista('grande', 0);
+  var novasDoces    = montarLista('doce', 100);
+  var novasMini     = montarLista('mini', 200);
+
+  // Só substitui se Firestore devolveu itens — evita apagar os defaults se categoria não bater
+  if (novasSalgadas.length > 0) pizzasSalgadas = novasSalgadas;
+  if (novasDoces.length > 0)    pizzasDoces    = novasDoces;
+  if (novasMini.length > 0)     miniPizzas     = novasMini;
 
   renderCards(pizzasSalgadas, "lista-salgadas");
   renderCards(pizzasDoces, "lista-doces");
@@ -1135,4 +1137,9 @@ window.onload = function() {
     document.getElementById("payment-spinner").style.display = "none";
     document.getElementById("payment-icon").textContent = "✅";
     document.getElementById("payment-title").textContent = "Pagamento realizado!";
-    docume
+    document.getElementById("payment-msg").textContent = "Seu pedido foi confirmado e ja esta sendo preparado. Obrigado por comprar na Fino Palastro!";
+  }
+};
+</script>
+</body>
+</html>
