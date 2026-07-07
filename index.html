@@ -56,7 +56,9 @@ body { font-family: 'Inter', sans-serif; background: var(--cream); color: var(--
 /* Foto da pizza */
 .card-img-wrap { width: 100%; height: 200px; border-radius: 20px 20px 0 0; overflow: hidden; background: #F2E8D5; }
 .card-img-wrap img { width: 100%; height: 100%; object-fit: cover; object-position: center center; mix-blend-mode: multiply; transition: transform 0.4s ease; display: block; }
-.pizza-card:hover .card-img-wrap img { transform: scale(1.03); }
+.pizza-card:hover .card-img-wrap img:not(.zoom-out) { transform: scale(1.03); }
+.card-img-wrap img.zoom-out { transform: scale(0.78); }
+.pizza-card:hover .card-img-wrap img.zoom-out { transform: scale(0.81); }
 
 /* Placeholder sem foto */
 .card-placeholder { height: 76px; border-radius: 20px 20px 0 0; background: #F5F0E8; display: flex; align-items: center; padding: 0 18px; gap: 12px; }
@@ -515,7 +517,8 @@ function renderCards(lista, containerId) {
     if (temFoto) {
       // Área da foto (200 px)
       html += '<div class="card-img-wrap">';
-      html += '<img src="' + foto + '" alt="' + p.nome.replace(/"/g, '') + '" loading="lazy"';
+      var zoomOut = (p.nome === 'Margherita Especial') ? ' class="zoom-out"' : '';
+      html += '<img src="' + foto + '" alt="' + p.nome.replace(/"/g, '') + '"' + zoomOut + ' loading="lazy"';
       html += ' onerror="this.parentElement.outerHTML=\'<div class=card-placeholder><span style=font-size:30px;opacity:0.22>🍕</span><span style=font-size:12px;color:var(--gray);font-style:italic;opacity:0.7>foto em breve</span></div>\'">';
       html += '</div>';
       // Badge do preço (flutua sobre a borda inferior da foto)
