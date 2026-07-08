@@ -133,24 +133,32 @@ body { font-family: 'Inter', sans-serif; background: var(--cream); color: var(--
 <div class="info-banner">Com pizza, coisas boas acontecem ate na terca-feira.</div>
 
 <div class="tabs">
-  <div class="tab active" id="tab-salgadas" onclick="showTab('salgadas')">Salgadas</div>
+  <div class="tab active" id="tab-salgadas" onclick="showTab('salgadas')">Tradicional</div>
   <div class="tab" id="tab-doces" onclick="showTab('doces')">Doces</div>
   <div class="tab" id="tab-mini" onclick="showTab('mini')">Mini 🍕</div>
+  <div class="tab" id="tab-antepastos" onclick="showTab('antepastos')">Antepastos</div>
   <div class="tab" id="tab-pedido" onclick="showTab('pedido')">Pedido</div>
 </div>
 
 <!-- SALGADAS -->
 <div id="sec-salgadas" class="section active">
-  <p class="section-title">Pizzas Salgadas</p>
+  <p class="section-title">Pizzas Tamanho Tradicional (30cm)</p>
   <p class="section-sub">Massa napolitana pre-assada · Ingredientes selecionados</p>
   <div id="lista-salgadas"></div>
 </div>
 
 <!-- DOCES -->
 <div id="sec-doces" class="section">
-  <p class="section-title">Pizzas Doces</p>
+  <p class="section-title">Pizzas Tamanho Tradicional Doce (30cm)</p>
   <p class="section-sub">Para adocar qualquer dia da semana</p>
   <div id="lista-doces"></div>
+</div>
+
+<!-- ANTEPASTOS -->
+<div id="sec-antepastos" class="section">
+  <p class="section-title">Antepastos</p>
+  <p class="section-sub">Produtos artesanais selecionados</p>
+  <div id="lista-antepastos"></div>
 </div>
 
 <!-- MINI PIZZAS -->
@@ -370,6 +378,10 @@ var pizzasDoces = [
   { id: 103, nome: "Laka com Geleia de Frutas Vermelhas e Mirtilo", desc: "Chocolate branco Laka, geleia de frutas vermelhas, mirtilo e leite condensado", preco: 60, estoque: true }
 ];
 
+var antepastos = [
+  { id: 301, nome: "Rotolina de Linguiça Blumenau com Catupiry", desc: "", preco: 0, estoque: true }
+];
+
 var carrinho = {};
 var localEscolhido = "";
 var cidadeEscolhida = "";
@@ -553,6 +565,7 @@ function renderCards(lista, containerId) {
 renderCards(pizzasSalgadas, "lista-salgadas");
 renderCards(pizzasDoces, "lista-doces");
 renderCards(miniPizzas, "lista-mini");
+renderCards(antepastos, "lista-antepastos");
 
 // ── Estoque em tempo real via Firestore ──────────────────────────────────
 var ultimoEstoqueData = {};
@@ -570,9 +583,10 @@ var ultimoEstoqueData = {};
 
 function aplicarEstoque(estoque) {
   var todasListas = [
-    { lista: pizzasSalgadas,  containerId: 'lista-salgadas' },
-    { lista: pizzasDoces,     containerId: 'lista-doces'    },
-    { lista: miniPizzas,      containerId: 'lista-mini'     }
+    { lista: pizzasSalgadas,  containerId: 'lista-salgadas'    },
+    { lista: pizzasDoces,     containerId: 'lista-doces'       },
+    { lista: miniPizzas,      containerId: 'lista-mini'        },
+    { lista: antepastos,      containerId: 'lista-antepastos'  }
   ];
   todasListas.forEach(function(l) {
     var alterou = false;
@@ -620,22 +634,25 @@ function aplicarCatalogoSabores(sabores) {
       return { id: base + i + 1, nome: s.nome, desc: s.desc || '', preco: s.preco, estoque: estoqueFor(s.nome) };
     });
   }
-  var novasSalgadas = montarLista('grande', 0);
-  var novasDoces    = montarLista('doce', 100);
-  var novasMini     = montarLista('mini', 200);
+  var novasSalgadas    = montarLista('grande',    0);
+  var novasDoces       = montarLista('doce',      100);
+  var novasMini        = montarLista('mini',      200);
+  var novosAntepastos  = montarLista('antepasto', 300);
 
   // Só substitui se Firestore devolveu itens — evita apagar os defaults se categoria não bater
-  if (novasSalgadas.length > 0) pizzasSalgadas = novasSalgadas;
-  if (novasDoces.length > 0)    pizzasDoces    = novasDoces;
-  if (novasMini.length > 0)     miniPizzas     = novasMini;
+  if (novasSalgadas.length > 0)   pizzasSalgadas = novasSalgadas;
+  if (novasDoces.length > 0)      pizzasDoces    = novasDoces;
+  if (novasMini.length > 0)       miniPizzas     = novasMini;
+  if (novosAntepastos.length > 0) antepastos     = novosAntepastos;
 
   renderCards(pizzasSalgadas, "lista-salgadas");
   renderCards(pizzasDoces, "lista-doces");
   renderCards(miniPizzas, "lista-mini");
+  renderCards(antepastos, "lista-antepastos");
 }
 
 function showTab(aba) {
-  var abas = ["salgadas", "doces", "mini", "pedido"];
+  var abas = ["salgadas", "doces", "mini", "antepastos", "pedido"];
   for (var i = 0; i < abas.length; i++) {
     document.getElementById("tab-" + abas[i]).className = "tab" + (aba === abas[i] ? " active" : "");
     document.getElementById("sec-" + abas[i]).className = "section" + (aba === abas[i] ? " active" : "");
