@@ -515,13 +515,16 @@ var fotosPizzas = {
   'Laka oreo':                         'Laka oreo.jpeg',
   'Chocolate preto e branco com morango': 'Chocolate preto e branco com morango.jpeg',
 };
+// Mapa auxiliar em minúsculas para busca case-insensitive
+var fotosPizzasLower = {};
+Object.keys(fotosPizzas).forEach(function(k){ fotosPizzasLower[k.toLowerCase()] = fotosPizzas[k]; });
 
 function renderCards(lista, containerId) {
   var el = document.getElementById(containerId);
   var html = "";
   for (var i = 0; i < lista.length; i++) {
     var p = lista[i];
-    var foto = fotosPizzas[p.nome] || null;
+    var foto = fotosPizzas[p.nome] || fotosPizzasLower[(p.nome||'').toLowerCase()] || null;
     var temFoto = !!foto;
 
     html += '<div class="pizza-card' + (!p.estoque ? ' esgotado' : '') + '">';
